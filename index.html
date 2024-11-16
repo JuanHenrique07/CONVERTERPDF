@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>PDF Converter</title>
+</head>
+<body>
+    <div class="container-text">
+        <h1>PDF CONVERTER</h1>
+        <div class="como">
+            <h2>Para convertir tu archivo a PDF:</h2>
+            <ol>
+                <li>Haz clic en "Seleccionar archivo"</li>
+                <li>Haz clic en "Transformar"</li>
+                <li>Haz clic en "Descargar"</li>
+            </ol>
+        </div>
+
+        <!-- Formulario de carga de archivos -->
+        <form id="convert-form" class="file-upload" action="http://161.22.47.164:8443/convert/" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input" required>
+            <button type="submit">Transformar</button>
+        </form>
+
+        <!-- Mensaje de descarga -->
+        <div id="download-message" style="display: none;">
+            <p>¡Tu archivo ha sido convertido! Haz clic abajo para descargarlo.</p>
+            <a id="download-link" href="#" download="archivo.pdf">Descargar PDF</a>
+        </div>
+    </div>
+
+    <!-- Script para manejar la conversión -->
+    <script>
+        // Obtener el token CSRF desde la plantilla Django (esto asegura que el token CSRF sea incluido en las solicitudes POST)
+        const csrfToken = '{{ csrf_token }}';
+
+        document.getElementById('convert-form').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Evitar recargar la página
+            const formData = new FormData(this);
+
+            try {
+                // Enviar archivo al backend Django con el token CSRF en las cabeceras
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,  // Incluir el token CSRF en las cabeceras
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Error en la conversión");
+
+                // Crear el enlace de descarga
+                const blob = await response.blob();
+                const downloadLink = document.getElementById('download-link');
+                downloadLink.href = URL.createObjectURL(blob);
+                
+                // Mostrar el mensaje de descarga
+                document.getElementById('download-message').style.display = 'flex';
+            } catch (error) {
+                alert("Hubo un problema con la conversión. Inténtalo de nuevo.");
+            }
+        });
+    </script>
+</body>
+</html>
